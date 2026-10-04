@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Temporary Audio Files (TTS & voice tests)
+*.mp3
+temp_*.mp3
+test_*.mp3
+
+# Log files
+logs/*.txt
+!logs/.gitkeep
+
+# Persistent Vector Memory DB (Generated at runtime)
+memory/chroma_db/
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

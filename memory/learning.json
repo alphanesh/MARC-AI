@@ -1,0 +1,34 @@
+{
+  "goals": [
+    {
+      "id": "learn-1",
+      "topic": "LLM Fine-Tuning & Quantization",
+      "target_hours": 20,
+      "hours_logged": 8.5,
+      "key_concepts": [
+        "LoRA",
+        "QLoRA",
+        "GGUF Formats"
+      ]
+    },
+    {
+      "id": "learn-2",
+      "topic": "Python Asyncio & Distributed Systems",
+      "target_hours": 15,
+      "hours_logged": 5.0,
+      "key_concepts": [
+        "Event Loops",
+        "WebSockets",
+        "Task Queues"
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "date": "2026-09-18",
+      "topic": "LLM Fine-Tuning",
+      "minutes": 90,
+      "note": "Studied GGUF quantization levels for RTX 3050."
+    }
+  ]
+}

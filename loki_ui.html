@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L.O.K.I. Core Interface</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
+
+        :root {
+            --neon-blue: #00e5ff;
+            --dark-blue: #001b33;
+            --glass-bg: rgba(0, 15, 30, 0.4); 
+            --glass-border: rgba(0, 229, 255, 0.3);
+        }
+
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #010103; 
+            font-family: 'Roboto', sans-serif; 
+            color: #fff;
+        }
+        
+        #canvas-container { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            z-index: 1; 
+        }
+
+        /* --- HOLOGRAPHIC UI CONTAINER --- */
+        #ui-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; 
+        }
+
+        #chat-interface {
+            width: 100%;
+            max-width: 600px;
+            height: 85vh;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.1), inset 0 0 20px rgba(0, 229, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto; 
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Scanline effect */
+        #chat-interface::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+            z-index: 2;
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        /* --- HEADER --- */
+        #chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 229, 255, 0.05);
+            z-index: 3;
+        }
+
+        #chat-header h1 { 
+            margin: 0; 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px; 
+            color: var(--neon-blue);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pulse-dot {
+            width: 10px; height: 10px; 
+            background: var(--neon-blue);
+            border-radius: 50%; 
+            box-shadow: 0 0 10px var(--neon-blue);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 229, 255, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 229, 255, 0); }
+        }
+
+        /* --- CHAT HISTORY --- */
+        #chat-history {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 3;
+        }
+
+        #chat-history::-webkit-scrollbar { width: 4px; }
+        #chat-history::-webkit-scrollbar-track { background: transparent; }
+        #chat-history::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.3); border-radius: 10px; }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.5;
+            position: relative;
+            animation: slideIn 0.3s ease-out forwards;
+            backdrop-filter: blur(4px);
+            white-space: pre-wrap; /* to support newlines */
+        }
+
+        @keyframes slideIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background: rgba(0, 229, 255, 0.15);
+            border-left: 3px solid var(--neon-blue);
+            color: #e0f7fa;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: rgba(255, 255, 255, 0.1);
+            border-right: 3px solid #fff;
+            color: #fff;
+        }
+
+        /* --- INPUT AREA --- */
+        #chat-input-container {
+            display: flex;
+            padding: 15px 20px;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.4);
+            gap: 10px;
+            z-index: 3;
+            align-items: center;
+        }
+
+        #chat-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Roboto', sans-serif;
+            font-size: 15px;
+            outline: none;
+        }
+
+        #chat-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+        .action-btn {
+            background: transparent;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover { 
+            background: var(--neon-blue); 
+            color: #000; 
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+        .action-btn:active { transform: scale(0.95); }
+
+        /* Voice Toggle styling */
+        #voice-btn {
+            border-color: #ff3366;
+            color: #ff3366;
+        }
+        #voice-btn:hover {
+            background: #ff3366;
+            color: #fff;
+            box-shadow: 0 0 15px #ff3366;
+        }
+        #voice-btn.active {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+        #voice-btn.active:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        /* --- MAIN LAYOUT & LIFE HUB --- */
+        #app-layout {
+            display: flex;
+            gap: 20px;
+            width: 95%;
+            max-width: 1200px;
+            height: 88vh;
+            pointer-events: auto;
+        }
+
+        #chat-interface {
+            flex: 1;
+        }
+
+        #life-hub {
+            width: 380px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.1), inset 0 0 20px rgba(0, 229, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow-y: auto;
+            gap: 15px;
+        }
+
+        .hub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+        }
+
+        .hub-header h2 {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            color: var(--neon-blue);
+            letter-spacing: 1px;
+        }
+
+        .brief-btn {
+            background: rgba(0, 229, 255, 0.2);
+            border: 1px solid var(--neon-blue);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .brief-btn:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .hub-section {
+            background: rgba(0, 15, 30, 0.6);
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hub-section h3 {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            color: #80d8ff;
+            letter-spacing: 1px;
+        }
+
+        .hub-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+
+        .item-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 229, 255, 0.05);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            border-left: 3px solid var(--neon-blue);
+        }
+
+        .item-card.completed {
+            opacity: 0.5;
+            text-decoration: line-through;
+            border-left-color: #555;
+        }
+
+        .item-card input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: var(--neon-blue);
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .badge.high { background: rgba(255, 52, 101, 0.3); color: #ff5252; border: 1px solid #ff5252; }
+        .badge.medium { background: rgba(255, 179, 0, 0.3); color: #ffb300; border: 1px solid #ffb300; }
+        .badge.low { background: rgba(0, 229, 255, 0.2); color: var(--neon-blue); }
+
+        .quick-add-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .quick-add-row input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .quick-add-row button {
+            background: var(--neon-blue);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            padding: 0 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        @keyframes scanLine {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+
+    </style>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+            }
+        }
+    </script>
+</head>
+<body>
+
+<!-- 3D Sparkling Background -->
+<div id="canvas-container"></div>
+
+<!-- Main App Layout -->
+<div id="ui-container">
+    <div id="app-layout">
+        <!-- Chat Interface -->
+        <div id="chat-interface">
+            <div id="chat-header">
+                <h1><div class="pulse-dot"></div> L.O.K.I CORE</h1>
+                <span style="font-family: monospace; color: rgba(255,255,255,0.5); font-size: 12px;" id="status-text">STATUS: ONLINE</span>
+            </div>
+            
+            <div id="chat-history">
+                <div class="message ai">L.O.K.I Life Assistant Engine Initialized. Optical Vision Systems & Qwen2.5-VL Multi-modal Eyes Ready.</div>
+            </div>
+            
+            <div id="chat-input-container">
+                <button class="action-btn" id="voice-btn">🎤 OFF</button>
+                <input type="text" id="chat-input" placeholder="Enter command sequence..." autocomplete="off" autofocus>
+                <button class="action-btn" id="send-btn">TRANSMIT</button>
+            </div>
+        </div>
+
+        <!-- Life Assistant Hub Panel -->
+        <div id="life-hub">
+            <div class="hub-header">
+                <h2>⚡ LIFE MANAGEMENT</h2>
+                <button id="brief-btn" class="brief-btn">☀️ BRIEFING</button>
+            </div>
+            
+            <!-- OPTICAL VISION HUD -->
+            <div class="hub-section" id="vision-hub-section">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>👁️ OPTICAL VISION HUD</h3>
+                    <button id="cam-toggle-btn" class="brief-btn" style="padding: 4px 8px;">📷 CAM ON</button>
+                </div>
+                <div id="camera-container" style="position:relative; width:100%; height:130px; background:#000; border-radius:8px; overflow:hidden; border:1px solid var(--neon-blue); display:flex; justify-content:center; align-items:center;">
+                    <video id="webcam-feed" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+                    <canvas id="webcam-canvas" style="display:none;"></canvas>
+                    <div id="camera-placeholder" style="font-size:11px; color:rgba(0,229,255,0.6); text-align:center;">
+                        📷 OPTICAL EYE OFF<br><span style="font-size:9px; opacity:0.6;">Click 'CAM ON' to activate camera feed</span>
+                    </div>
+                    <div id="scan-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; border:2px solid var(--neon-blue); box-sizing:border-box; pointer-events:none; background: radial-gradient(circle, transparent 60%, rgba(0, 229, 255, 0.2) 100%);">
+                        <div style="position:absolute; top:50%; left:0; width:100%; height:2px; background:rgba(0,229,255,0.6); animation: scanLine 2s infinite linear;"></div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                    <button id="scan-vision-btn" class="action-btn" style="flex:1; font-size:11px; padding:8px 0;">👁️ SCAN PC CAM</button>
+                    <label for="ipad-photo-input" class="action-btn" style="flex:1; font-size:11px; padding:8px 0; text-align:center; cursor:pointer; margin:0; line-height:1.2; display:flex; align-items:center; justify-content:center;">📸 SNAP PHOTO</label>
+                    <input type="file" id="ipad-photo-input" accept="image/*" capture="camera" style="display:none;" />
+                </div>
+            </div>
+
+            <div class="hub-section">
+                <h3>📅 TODAY'S SCHEDULE</h3>
+                <div id="schedule-list" class="hub-list"></div>
+                <div class="quick-add-row">
+                    <input type="text" id="sched-time-input" placeholder="09:00 AM" style="width: 75px;" />
+                    <input type="text" id="sched-title-input" placeholder="Add schedule item..." style="flex:1;" />
+                    <button id="add-sched-btn">+</button>
+                </div>
+            </div>
+            
+            <div class="hub-section">
+                <h3>📋 DAILY TASKS</h3>
+                <div id="tasks-list" class="hub-list"></div>
+                <div class="quick-add-row">
+                    <input type="text" id="task-title-input" placeholder="Add task item..." style="flex:1;" />
+                    <button id="add-task-btn">+</button>
+                </div>
+            </div>
+            
+            <div class="hub-section">
+                <h3>💡 LEARNING GOALS</h3>
+                <div id="learning-list" class="hub-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import * as THREE from 'three';
+
+    // ==========================================
+    // 1. 3D PERFECT CRESCENT MOON BACKGROUND
+    // ==========================================
+    
+    let scene, camera, renderer, moonSystem, starSystem;
+    
+    const basePos = [];     
+    const explodedPos = []; 
+    const currentPos = [];  
+    const moonCount = 8000; 
+    
+    let targetPop = 0;   
+    let popProgress = 0; 
+
+    window.triggerMoonPop = function() {
+        targetPop = 1.0; 
+        setTimeout(() => {
+            targetPop = 0.0;
+        }, 600);
+    };
+
+    function createSparkleTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64; canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        
+        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        gradient.addColorStop(0.2, 'rgba(0, 229, 255, 0.8)'); 
+        gradient.addColorStop(0.5, 'rgba(0, 100, 255, 0.2)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 64, 64);
+        
+        const tex = new THREE.Texture(canvas);
+        tex.needsUpdate = true;
+        return tex;
+    }
+
+    function init3D() {
+        const container = document.getElementById('canvas-container');
+        
+        scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x010103, 0.02); 
+
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 32; 
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const sparkleTex = createSparkleTexture();
+
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = [];
+        for(let i=0; i<2000; i++) {
+            starPos.push((Math.random()-0.5)*200, (Math.random()-0.5)*200, (Math.random()-0.5)*100 - 30);
+        }
+        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+        starSystem = new THREE.Points(starGeo, new THREE.PointsMaterial({
+            color: 0xffffff, size: 0.6, map: sparkleTex, 
+            transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false
+        }));
+        scene.add(starSystem);
+
+        const outerRadius = 14.0;
+        const innerRadius = 13.5; 
+        const xOffset = 6.0;      
+        const zThickness = 6.0;   
+
+        let added = 0;
+        while(added < moonCount) {
+            const x = (Math.random() - 0.5) * 2 * outerRadius;
+            const y = (Math.random() - 0.5) * 2 * outerRadius;
+            const z = (Math.random() - 0.5) * zThickness; 
+
+            if (Math.sqrt(x*x + y*y + z*z) > outerRadius) continue;
+            if (Math.sqrt((x - xOffset)**2 + y**2 + z*z) < innerRadius) continue;
+
+            basePos.push(x, y, z);
+            currentPos.push(x, y, z);
+
+            const explodeDir = new THREE.Vector3(x, y, z).normalize();
+            const explodeDist = 20 + Math.random() * 30; 
+            explodedPos.push(
+                x + explodeDir.x * explodeDist + (Math.random()-0.5)*15,
+                y + explodeDir.y * explodeDist + (Math.random()-0.5)*15,
+                z + explodeDir.z * explodeDist + (Math.random()-0.5)*15
+            );
+            
+            added++;
+        }
+        
+        const moonGeo = new THREE.BufferGeometry();
+        moonGeo.setAttribute('position', new THREE.Float32BufferAttribute(currentPos, 3));
+        
+        moonSystem = new THREE.Points(moonGeo, new THREE.PointsMaterial({
+            color: 0xe0ffff, 
+            size: 0.8, 
+            map: sparkleTex,
+            transparent: true, 
+            opacity: 0.9, 
+            blending: THREE.AdditiveBlending, 
+            depthWrite: false
+        }));
+        
+        moonSystem.rotation.z = 0.2;
+        moonSystem.rotation.x = 0.1;
+        
+        scene.add(moonSystem);
+
+        window.addEventListener('resize', onWindowResize);
+        animate3D();
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    let time = 0;
+    function animate3D() {
+        requestAnimationFrame(animate3D);
+        time += 0.005;
+        
+        starSystem.rotation.y += 0.0005;
+        popProgress += (targetPop - popProgress) * 0.1; 
+
+        const positions = moonSystem.geometry.attributes.position.array;
+        
+        for(let i=0; i<moonCount; i++) {
+            const ix = i * 3;
+            
+            const bx = basePos[ix];   const ex = explodedPos[ix];
+            const by = basePos[ix+1]; const ey = explodedPos[ix+1];
+            const bz = basePos[ix+2]; const ez = explodedPos[ix+2];
+
+            let currentX = bx + (ex - bx) * popProgress;
+            let currentY = by + (ey - by) * popProgress;
+            let currentZ = bz + (ez - bz) * popProgress;
+
+            if (popProgress < 0.1) {
+                currentY += Math.sin(time * 2 + currentX * 0.1) * 0.2;
+            }
+
+            positions[ix]   = currentX + (Math.random() - 0.5) * 0.05;
+            positions[ix+1] = currentY + (Math.random() - 0.5) * 0.05;
+            positions[ix+2] = currentZ + (Math.random() - 0.5) * 0.05;
+        }
+
+        moonSystem.geometry.attributes.position.needsUpdate = true;
+        renderer.render(scene, camera);
+    }
+
+    init3D();
+
+    // ==========================================
+    // 2. FRONT-END CHAT UI LOGIC (PYWEBVIEW BRIDGE)
+    // ==========================================
+
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    const voiceBtn = document.getElementById('voice-btn');
+    const chatHistory = document.getElementById('chat-history');
+    
+    let isProcessing = false;
+    let voiceModeActive = false;
+    let currentAiMessageElement = null;
+
+    let ws = null;
+    let pywebviewReady = false;
+
+    window.addEventListener('pywebviewready', () => {
+        pywebviewReady = true;
+        console.log("PyWebview API connected successfully.");
+    });
+    
+    function initWebSocket() {
+        const host = window.location.hostname || 'localhost';
+        try {
+            ws = new WebSocket(`ws://${host}:8765`);
+            ws.onopen = () => {
+                console.log("Connected to L.O.K.I Brain over WiFi/WebSocket");
+            };
+            ws.onmessage = (event) => {
+                let msg = JSON.parse(event.data);
+                if (msg.type === "token") window.appendToken(msg.data);
+                else if (msg.type === "finish") window.finishMessage();
+                else if (msg.type === "speech") window.receiveUserSpeech(msg.data);
+                else if (msg.type === "status") {
+                    window.updateStatus(msg.data);
+                    voiceModeActive = msg.data.includes("VOICE ACTIVE");
+                    voiceBtn.className = voiceModeActive ? "action-btn active" : "action-btn";
+                    voiceBtn.innerText = voiceModeActive ? "🎤 ON" : "🎤 OFF";
+                }
+                else if (msg.type === "interrupted") {
+                    window.onInterrupted();
+                }
+                else if (msg.type === "life_data") {
+                    window.updateLifeData(msg.data);
+                }
+            };
+            ws.onerror = (err) => console.log("WebSocket connection error");
+            ws.onclose = () => {
+                // Auto reconnect after 2s if server restarts
+                setTimeout(initWebSocket, 2000);
+            };
+        } catch(e) {
+            console.log("WebSocket init exception", e);
+            setTimeout(initWebSocket, 2000);
+        }
+    }
+
+    // Attempt WebSocket connection
+    initWebSocket();
+
+    function appendMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${sender}`;
+        msgDiv.innerText = text;
+        chatHistory.appendChild(msgDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function getApi() {
+        if (window.pywebview && window.pywebview.api && typeof window.pywebview.api.send_message === 'function') {
+            return window.pywebview.api;
+        }
+        return null;
+    }
+
+    function handleSend() {
+        const text = chatInput.value.trim();
+        if (!text || isProcessing) return;
+        
+        appendMessage(text, 'user');
+        chatInput.value = '';
+        window.triggerMoonPop();
+        
+        isProcessing = true;
+        
+        const api = getApi();
+        if (api) {
+            api.send_message(text);
+        } else if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: "message", data: text}));
+        } else {
+            // Try connecting to WebSocket on demand
+            const host = window.location.hostname || 'localhost';
+            const retryWs = new WebSocket(`ws://${host}:8765`);
+            retryWs.onopen = () => {
+                ws = retryWs;
+                ws.send(JSON.stringify({type: "message", data: text}));
+            };
+            retryWs.onerror = () => {
+                // Check pywebview one last time before declaring error
+                const lateApi = getApi();
+                if (lateApi) {
+                    lateApi.send_message(text);
+                } else {
+                    setTimeout(() => { window.appendToken("No Python Backend Connection! Make sure 'python loki_app.py' is running."); window.finishMessage(); }, 300);
+                }
+            };
+        }
+    }
+
+    sendBtn.addEventListener('click', handleSend);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSend();
+        }
+    });
+
+    let lastAiResponseText = "";
+
+    function isSelfEcho(transcript, lastAiText) {
+        if (!transcript || !lastAiText) return false;
+        const clean = s => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+        const tClean = clean(transcript);
+        const aClean = clean(lastAiText);
+        if (!tClean || !aClean) return false;
+        if (tClean === aClean || aClean.includes(tClean) || tClean.includes(aClean)) return true;
+        
+        const tWords = tClean.split(/\s+/);
+        const aWords = new Set(aClean.split(/\s+/));
+        if (tWords.length === 0) return false;
+        let matchCount = 0;
+        tWords.forEach(w => { if (aWords.has(w)) matchCount++; });
+        return (matchCount / tWords.length) > 0.6;
+    }
+
+    // Native Web Speech API Bridge for instant Edge/Chrome mic capture
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let nativeRecognition = null;
+
+    if (SpeechRecognition) {
+        try {
+            nativeRecognition = new SpeechRecognition();
+            nativeRecognition.continuous = true;
+            nativeRecognition.interimResults = false;
+            nativeRecognition.lang = 'en-US';
+
+            nativeRecognition.onresult = (event) => {
+                if (isProcessing) {
+                    console.log("🔇 Ignored STT result while AI is processing to prevent self-echo loop.");
+                    return;
+                }
+                const lastResultIndex = event.results.length - 1;
+                const transcript = event.results[lastResultIndex][0].transcript.trim();
+                if (transcript) {
+                    if (isSelfEcho(transcript, lastAiResponseText)) {
+                        console.log("🔇 Discarded browser STT self-echo:", transcript);
+                        return;
+                    }
+                    console.log("🎤 Native Browser STT Captured:", transcript);
+
+                    appendMessage(transcript, 'user');
+                    window.triggerMoonPop();
+                    isProcessing = true;
+                    try { nativeRecognition.stop(); } catch(e){}
+                    
+                    const api = getApi();
+                    if (api) {
+                        api.send_message(transcript);
+                    } else if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({type: "message", data: transcript}));
+                    }
+                }
+            };
+
+            nativeRecognition.onerror = (e) => {
+                console.log("Native STT error:", e.error);
+            };
+
+            nativeRecognition.onend = () => {
+                if (voiceModeActive && !isProcessing) {
+                    try { nativeRecognition.start(); } catch(e){}
+                }
+            };
+        } catch(e) {
+            console.log("Native SpeechRecognition init failed:", e);
+        }
+    }
+
+    // Toggle Voice Mode
+    voiceBtn.addEventListener('click', () => {
+        voiceModeActive = !voiceModeActive;
+        voiceBtn.className = voiceModeActive ? "action-btn active" : "action-btn";
+        voiceBtn.innerText = voiceModeActive ? "🎤 ON" : "🎤 OFF";
+        document.getElementById('status-text').innerText = voiceModeActive ? "STATUS: VOICE ACTIVE - SPEAK NOW" : "STATUS: ONLINE";
+        
+        if (nativeRecognition) {
+            if (voiceModeActive) {
+                try { nativeRecognition.start(); } catch(e){}
+            } else {
+                try { nativeRecognition.stop(); } catch(e){}
+            }
+        }
+
+        const api = getApi();
+        if (api) {
+            api.toggle_voice(voiceModeActive);
+        } else if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: "toggle_voice", data: voiceModeActive}));
+        }
+    });
+
+    // ==========================================
+    // EXPOSED APIs FOR PYTHON TO CALL
+    // ==========================================
+    
+    window.appendToken = function(token) {
+        if (!currentAiMessageElement) {
+            currentAiMessageElement = document.createElement('div');
+            currentAiMessageElement.className = 'message ai';
+            chatHistory.appendChild(currentAiMessageElement);
+        }
+        currentAiMessageElement.innerText += token;
+        lastAiResponseText = currentAiMessageElement.innerText;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    };
+
+    window.onInterrupted = function() {
+        if (window.speechSynthesis) {
+            try { window.speechSynthesis.cancel(); } catch(e){}
+        }
+        if (currentAiMessageElement) {
+            currentAiMessageElement.innerText += " [Interrupted]";
+            currentAiMessageElement = null;
+        }
+        isProcessing = false;
+    };
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || (e.ctrlKey && e.key.toLowerCase() === 'z')) {
+            console.log("Interrupt key pressed (Escape / Ctrl+Z)");
+            window.onInterrupted();
+            const api = getApi();
+            if (api && typeof api.interrupt_speech === 'function') {
+                api.interrupt_speech();
+            } else if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({type: "interrupt"}));
+            }
+        }
+    });
+
+    window.finishMessage = function() {
+        currentAiMessageElement = null;
+        isProcessing = false;
+        const btn = document.getElementById('scan-vision-btn');
+        if (btn) btn.innerText = "👁️ SCAN & ANALYZE VISION";
+        if (voiceModeActive && nativeRecognition) {
+            try { nativeRecognition.start(); } catch(e){}
+        }
+    };
+
+    window.receiveUserSpeech = function(text) {
+        if (isSelfEcho(text, lastAiResponseText)) {
+            console.log("🔇 Ignored user speech self-echo:", text);
+            return;
+        }
+        appendMessage(text, 'user');
+        window.triggerMoonPop();
+        isProcessing = true;
+        if (nativeRecognition) {
+            try { nativeRecognition.stop(); } catch(e){}
+        }
+    };
+    
+    window.updateStatus = function(statusText) {
+        document.getElementById('status-text').innerText = statusText;
+    };
+
+    // ==========================================
+    // OPTICAL VISION HUD & WEBCAM LOGIC
+    // ==========================================
+    const camToggleBtn = document.getElementById('cam-toggle-btn');
+    const scanVisionBtn = document.getElementById('scan-vision-btn');
+    const webcamFeed = document.getElementById('webcam-feed');
+    const webcamCanvas = document.getElementById('webcam-canvas');
+    const cameraPlaceholder = document.getElementById('camera-placeholder');
+    const scanOverlay = document.getElementById('scan-overlay');
+    let mediaStream = null;
+
+    async function toggleCamera() {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+            webcamFeed.style.display = 'none';
+            scanOverlay.style.display = 'none';
+            cameraPlaceholder.style.display = 'block';
+            camToggleBtn.innerText = '📷 CAM ON';
+        } else {
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                webcamFeed.srcObject = mediaStream;
+                webcamFeed.style.display = 'block';
+                scanOverlay.style.display = 'block';
+                cameraPlaceholder.style.display = 'none';
+                camToggleBtn.innerText = '📷 CAM OFF';
+            } catch (err) {
+                console.log("Webcam access notice:", err);
+                alert("Could not access camera feed. L.O.K.I will fallback to OpenCV system webcam.");
+            }
+        }
+    }
+
+    if (camToggleBtn) camToggleBtn.addEventListener('click', toggleCamera);
+
+    function captureCanvasFrameB64() {
+        if (!webcamFeed || webcamFeed.style.display === 'none') return null;
+        try {
+            webcamCanvas.width = 480;
+            webcamCanvas.height = 360;
+            const ctx = webcamCanvas.getContext('2d');
+            ctx.drawImage(webcamFeed, 0, 0, 480, 360);
+            return webcamCanvas.toDataURL('image/jpeg', 0.6);
+        } catch(e) { return null; }
+    }
+
+    if (scanVisionBtn) {
+        scanVisionBtn.addEventListener('click', async () => {
+            if (isProcessing) return;
+            if (webcamFeed && webcamFeed.style.display === 'none') {
+                await toggleCamera();
+            }
+            const frameB64 = captureCanvasFrameB64();
+            appendMessage("[Optical Eye]: Scanning environment...", 'user');
+            window.triggerMoonPop();
+            isProcessing = true;
+            scanVisionBtn.innerText = "⚡ ANALYZING VISION...";
+            
+            const api = getApi();
+            if (api) {
+                api.analyze_vision(frameB64, "What do you see in this camera view? Be precise, describe key objects, people, or details clearly.");
+            } else if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({type: "analyze_vision", image: frameB64, prompt: "What do you see in this camera view?"}));
+            }
+        });
+    }
+
+    const ipadPhotoInput = document.getElementById('ipad-photo-input');
+    if (ipadPhotoInput) {
+        ipadPhotoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const imageB64 = evt.target.result;
+                window.receiveUserSpeech("[Photo Captured]: Uploading iPad camera image for vision analysis...");
+                window.triggerMoonPop();
+                isProcessing = true;
+                
+                const api = getApi();
+                if (api) {
+                    api.analyze_vision(imageB64, "What do you see in this photo? Be precise, describe key objects, people, or details clearly.");
+                } else if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: "analyze_vision",
+                        image: imageB64,
+                        prompt: "What do you see in this photo? Be precise, describe key objects, people, or details clearly."
+                    }));
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ==========================================
+    // LIFE HUB RENDERER & INTERACTIVE HANDLERS
+    // ==========================================
+    const briefBtn = document.getElementById('brief-btn');
+    const schedList = document.getElementById('schedule-list');
+    const tasksList = document.getElementById('tasks-list');
+    const learningList = document.getElementById('learning-list');
+    const addSchedBtn = document.getElementById('add-sched-btn');
+    const addTaskBtn = document.getElementById('add-task-btn');
+
+    briefBtn.addEventListener('click', () => {
+        chatInput.value = "daily brief";
+        handleSend();
+    });
+
+    addSchedBtn.addEventListener('click', () => {
+        const timeVal = document.getElementById('sched-time-input').value.trim();
+        const titleVal = document.getElementById('sched-title-input').value.trim();
+        if (!titleVal) return;
+        
+        const api = getApi();
+        if (api) {
+            api.add_schedule_event(timeVal, titleVal);
+        } else if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: "add_schedule", time: timeVal, title: titleVal}));
+        }
+        document.getElementById('sched-time-input').value = '';
+        document.getElementById('sched-title-input').value = '';
+    });
+
+    addTaskBtn.addEventListener('click', () => {
+        const titleVal = document.getElementById('task-title-input').value.trim();
+        if (!titleVal) return;
+        
+        const api = getApi();
+        if (api) {
+            api.add_task(titleVal, "Medium");
+        } else if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: "add_task", title: titleVal, priority: "Medium"}));
+        }
+        document.getElementById('task-title-input').value = '';
+    });
+
+    window.toggleTask = function(taskId) {
+        const api = getApi();
+        if (api) {
+            api.toggle_task(taskId);
+        } else if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: "toggle_task", id: taskId}));
+        }
+    };
+
+    window.updateLifeData = function(data) {
+        if (!data) return;
+        
+        // Render Schedule
+        if (data.schedule) {
+            schedList.innerHTML = '';
+            if (data.schedule.length === 0) {
+                schedList.innerHTML = '<div style="font-size:11px; opacity:0.5;">No events scheduled.</div>';
+            } else {
+                data.schedule.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `item-card ${item.completed ? 'completed' : ''}`;
+                    card.innerHTML = `<span><strong>${item.time}</strong> - ${item.title}</span>`;
+                    schedList.appendChild(card);
+                });
+            }
+        }
+
+        // Render Tasks
+        if (data.tasks) {
+            tasksList.innerHTML = '';
+            if (data.tasks.length === 0) {
+                tasksList.innerHTML = '<div style="font-size:11px; opacity:0.5;">All tasks complete!</div>';
+            } else {
+                data.tasks.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `item-card ${item.completed ? 'completed' : ''}`;
+                    const prioClass = (item.priority || 'medium').toLowerCase();
+                    card.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" ${item.completed ? 'checked' : ''} onclick="window.toggleTask('${item.id}')" />
+                            <span>${item.title}</span>
+                        </div>
+                        <span class="badge ${prioClass}">${item.priority || 'Medium'}</span>
+                    `;
+                    tasksList.appendChild(card);
+                });
+            }
+        }
+
+        // Render Learning
+        if (data.learning) {
+            learningList.innerHTML = '';
+            if (data.learning.length === 0) {
+                learningList.innerHTML = '<div style="font-size:11px; opacity:0.5;">No active learning goals.</div>';
+            } else {
+                data.learning.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    const pct = Math.min(100, Math.round((item.hours_logged / item.target_hours) * 100));
+                    card.innerHTML = `
+                        <div style="width:100%;">
+                            <div style="display:flex; justify-size:space-between; justify-content:space-between;">
+                                <strong>${item.topic}</strong>
+                                <span style="font-family:monospace; font-size:10px;">${item.hours_logged}/${item.target_hours}h (${pct}%)</span>
+                            </div>
+                            <div style="width:100%; height:4px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:4px; overflow:hidden;">
+                                <div style="width:${pct}%; height:100%; background:var(--neon-blue);"></div>
+                            </div>
+                        </div>
+                    `;
+                    learningList.appendChild(card);
+                });
+            }
+        }
+    };
+
+    // Request initial life data fetch on load
+    setTimeout(() => {
+        const api = getApi();
+        if (api) {
+            const data = api.get_life_data();
+            window.updateLifeData(data);
+        } else if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: "get_life_data"}));
+        }
+    }, 1000);
+
+</script>
+</body>
+</html>

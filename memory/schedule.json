@@ -1,0 +1,25 @@
+{
+  "events": [
+    {
+      "id": "1",
+      "time": "09:00 AM",
+      "title": "Morning Briefing & System Check",
+      "category": "Routine",
+      "completed": false
+    },
+    {
+      "id": "2",
+      "time": "10:30 AM",
+      "title": "Deep Focus: AI Architecture & Development",
+      "category": "Work",
+      "completed": false
+    },
+    {
+      "id": "3",
+      "time": "03:00 PM",
+      "title": "Learning Session: Distributed LLMs & RAG",
+      "category": "Learning",
+      "completed": false
+    }
+  ]
+}

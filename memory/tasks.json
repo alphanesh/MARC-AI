@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Review AI Assistant codebase",
+      "priority": "High",
+      "completed": true
+    },
+    {
+      "id": "task-2",
+      "title": "Set up daily learning goal for Machine Learning",
+      "priority": "Medium",
+      "completed": true
+    },
+    {
+      "id": "task-3",
+      "title": "Review schedule and plan evening workout",
+      "priority": "Low",
+      "completed": true
+    }
+  ]
+}

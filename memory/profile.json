@@ -1,0 +1,22 @@
+{
+  "user_name": "Boss",
+  "user_traits": [
+    "creative",
+    "ambitious",
+    "tech-savvy"
+  ],
+  "favorite_topics": [
+    "Artificial Intelligence",
+    "Software Engineering",
+    "Cybersecurity"
+  ],
+  "loki_traits": [
+    "professional",
+    "efficient",
+    "loyal"
+  ],
+  "facts": [
+    "Created as a 100% local, private AI assistant."
+  ],
+  "mic_device_index": null
+}
